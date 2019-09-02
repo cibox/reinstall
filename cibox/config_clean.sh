@@ -3,9 +3,8 @@
 #
 # Profile Config Cleaner
 #
-# This script helps to maintain configuration for Drupal8. The main idea of this script is to
-# avoid routine handwork of selecting appropriate config files and copying them to appropriate
-# directories (profile directory for profile flow or staging directory for sql flow).
+# This script helps to maintain configuration for installation profiles in Drupal8. The main idea of this script is to
+# avoid routine handwork of selecting appropriate config files.
 #
 # How to work with the script?
 #
@@ -21,12 +20,6 @@
 # 3. Run git status
 # 4. Check your files. Probably, you'll need to remove some redundant files. If so, please, add these files to the
 #    config_clean.yml exclude variable.
-#
-# Use the next command to get all *.yml files in directory
-# find . -type f -name "*.yml" | grep 'config/install/' | grep -o '[^/]*yml$' | awk '{print "- { name: \""$1"\", status: true }"}'
-#
-# We recommend you to add all available configs from core, modules and themes using the command mentioned above before starting
-# to work on the project. Then just exclude config files from `config_clean.yml` which you want to use.
 
 
 if [ "$1" = "--windows" ]; then

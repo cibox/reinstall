@@ -1,6 +1,28 @@
 ---
 env:
-  pre_settings: []
+  pre_settings:
+    - { name: '$settings["hash_salt"]', status: true, value: '1N26qj6mgJF6BpGU_Flo4SLiA72DCZMRd-WkCInvTd3VumZoxvGK_torzbh6JgHg010jkiL3HQ'}
+    - { name: '$databases["amm_source"]["default"]["database"]', status: true, value: '{{ old_source_db_name }}' }
+    - { name: '$databases["amm_source"]["default"]["username"]', status: true, value: 'root' }
+    - { name: '$databases["amm_source"]["default"]["password"]', status: true, value: 'root' }
+    - { name: '$databases["amm_source"]["default"]["host"]', status: true, value: '127.0.0.1' }
+    - { name: '$databases["amm_source"]["default"]["namespace"]', status: true, value: 'Drupal\\\\Core\\\\Database\\\\Driver\\\\mysql' }
+    - { name: '$databases["amm_source"]["default"]["driver"]', status: true, value: 'mysql' }
+    - { name: '$config_directories["staging"]', status: true, value: 'sites/default/config/staging' }
+    - { name: '$config_directories["sync"]', status: true, value: 'sites/default/config/staging' }
+    - { name: '$settings["install_profile"]', status: true, value: 'openy' }
+    - { name: '$config["system.file"]["path"]["temporary"]', status: true, value: '/tmp' }
+    - { name: '$settings["memcache"]["bins"]', status: false, value: '[\\"default\\" => \\"default\\"]' }
+    - { name: '$settings["memcache"]["key_prefix"]', status: false, value: '{{ mysql_db }}' }
+    - { name: '$settings["cache"]["default"]', status: false, value: 'cache.backend.memcache' }
+  pre_drush_commands:
+    - { name: 'cr', status: true, arguments: "" }
+  shell_commands:
+    - { name: 'Update Drupal Entities', status: true, arguments: "drush entup -y || true"}
+    - { name: 'Clear cache', status: true, arguments: "drush cr" }
+    - { name: 'Update Drupal DB', status: true, arguments: "drush updatedb -y || true"}
   modules: []
-  drush_commands: []
+  drush_commands:
+    - { name: 'ciboxcr', status: true, arguments: "" }
+    - { name: 'cr', status: true, arguments: "" }
   post_settings: []
