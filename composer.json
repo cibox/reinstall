@@ -2,7 +2,7 @@
     "name": "cibox/reinstall",
     "description": "Install infrastructure for CIBox",
     "type": "project",
-    "license": "GPLv3",
+    "license": "GPL-3.0-only",
     "authors": [
         {
             "name": "Andrii Podanenko",
