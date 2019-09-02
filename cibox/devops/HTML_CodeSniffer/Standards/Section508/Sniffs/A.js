@@ -11,7 +11,7 @@
  *
  */
 
-_global.HTMLCS_Section508_Sniffs_A = {
+var HTMLCS_Section508_Sniffs_A = {
     /**
      * Determines the elements to register for processing.
      *
@@ -87,7 +87,7 @@ _global.HTMLCS_Section508_Sniffs_A = {
             }
         };
 
-        elements = HTMLCS.util.getAllElements(top, 'img, area, input[type="image"]');
+        elements = top.querySelectorAll('img, area, input[type="image"]');
 
         for (var el = 0; el < elements.length; el++) {
             var element = elements[el];
@@ -98,8 +98,8 @@ _global.HTMLCS_Section508_Sniffs_A = {
             var nullAlt       = false;
 
             if (element.parentNode.nodeName.toLowerCase() === 'a') {
-                var prevNode = HTMLCS.util.getPreviousSiblingElement(element, null);
-                var nextNode = HTMLCS.util.getNextSiblingElement(element, null);
+                var prevNode = this._getPreviousSiblingElement(element, null);
+                var nextNode = this._getNextSiblingElement(element, null);
 
                 if ((prevNode === null) && (nextNode === null)) {
                     var textContent = element.parentNode.textContent;
@@ -237,7 +237,7 @@ _global.HTMLCS_Section508_Sniffs_A = {
             }
         };
 
-        var elements = HTMLCS.util.getAllElements(top, 'object');
+        var elements = top.querySelectorAll('object');
 
         for (var el = 0; el < elements.length; el++) {
             var element  = elements[el];
@@ -257,7 +257,7 @@ _global.HTMLCS_Section508_Sniffs_A = {
             }//end if
         }//end if
 
-        var elements = HTMLCS.util.getAllElements(top, 'applet');
+        var elements = top.querySelectorAll('applet');
 
         for (var el = 0; el < elements.length; el++) {
             // Test firstly for whether we have an object alternative.
@@ -322,5 +322,157 @@ _global.HTMLCS_Section508_Sniffs_A = {
         for (var i = 0; i < errors.applet.generalAlt.length; i++) {
             HTMLCS.addMessage(HTMLCS.NOTICE, errors.applet.generalAlt[i], 'Check that short (and if appropriate, long) text alternatives are available for non-text content that serve the same purpose and present the same information.', 'Applet.GeneralAlt');
         }
+    },
+
+    /**
+     * Gets just the alt text from any images on a link.
+     *
+     * @param {DOMNode} anchor The link element being inspected.
+     *
+     * @returns {String} The alt text.
+     */
+    _getLinkAltText: function(anchor)
+    {
+        var anchor = anchor.cloneNode(true);
+        var nodes  = [];
+        for (var i = 0; i < anchor.childNodes.length; i++) {
+            nodes.push(anchor.childNodes[i]);
+        }
+
+        var alt = null;
+        while (nodes.length > 0) {
+            var node = nodes.shift();
+
+            // If it's an element, add any sub-nodes to the process list.
+            if (node.nodeType === 1) {
+                if (node.nodeName.toLowerCase() === 'img') {
+                    if (node.hasAttribute('alt') === true) {
+                        alt = node.getAttribute('alt');
+                        if (!alt) {
+                            alt = '';
+                        } else {
+                            // Trim the alt text.
+                            alt = alt.replace(/^\s+|\s+$/g,'');
+                        }
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        return alt;
+    },
+
+    /**
+     * Get the previous sibling element.
+     *
+     * This is a substitute for previousSibling where there are text, comment and
+     * other nodes between elements.
+     *
+     * If tagName is null, immediate is ignored and effectively defaults to true: the
+     * previous element will be returned regardless of what it is.
+     *
+     * @param {DOMNode} element           Element to start from.
+     * @param {String}  [tagName=null]    Only match this tag. If null, match any.
+     *                                    Not case-sensitive.
+     * @param {Boolean} [immediate=false] Only match if the tag in tagName is the
+     *                                    immediately preceding non-whitespace node.
+     *
+     * @returns {DOMNode} The appropriate node or null if none is found.
+     */
+    _getPreviousSiblingElement: function(element, tagName, immediate) {
+        if (tagName === undefined) {
+            tagName = null;
+        }
+
+        if (immediate === undefined) {
+            immediate = false;
+        }
+
+        var prevNode = element.previousSibling;
+        while (prevNode !== null) {
+            if (prevNode.nodeType === 3) {
+                if ((HTMLCS.util.isStringEmpty(prevNode.nodeValue) === false) && (immediate === true)) {
+                    // Failed. Immediate node requested and we got text instead.
+                    prevNode = null;
+                    break;
+                }
+            } else if (prevNode.nodeType === 1) {
+                // If this an element, we break regardless. If it's an "a" node,
+                // it's the one we want. Otherwise, there is no adjacent "a" node
+                // and it can be ignored.
+                if ((tagName === null) || (prevNode.nodeName.toLowerCase() === tagName)) {
+                    // Correct element, or we aren't picky.
+                    break;
+                } else if (immediate === true) {
+                    // Failed. Immediate node requested and not correct tag name.
+                    prevNode = null;
+                    break;
+                }
+
+                break;
+            }//end if
+
+            prevNode = prevNode.previousSibling;
+        }//end if
+
+        return prevNode;
+    },
+
+    /**
+     * Get the next sibling element.
+     *
+     * This is a substitute for nextSibling where there are text, comment and
+     * other nodes between elements.
+     *
+     * If tagName is null, immediate is ignored and effectively defaults to true: the
+     * next element will be returned regardless of what it is.
+     *
+     * @param {DOMNode} element           Element to start from.
+     * @param {String}  [tagName=null]    Only match this tag. If null, match any.
+     *                                    Not case-sensitive.
+     * @param {Boolean} [immediate=false] Only match if the tag in tagName is the
+     *                                    immediately following non-whitespace node.
+     *
+     * @returns {DOMNode} The appropriate node or null if none is found.
+     */
+    _getNextSiblingElement: function(element, tagName, immediate) {
+        if (tagName === undefined) {
+            tagName = null;
+        }
+
+        if (immediate === undefined) {
+            immediate = false;
+        }
+
+        var nextNode = element.nextSibling;
+        while (nextNode !== null) {
+            if (nextNode.nodeType === 3) {
+                if ((HTMLCS.util.isStringEmpty(nextNode.nodeValue) === false) && (immediate === true)) {
+                    // Failed. Immediate node requested and we got text instead.
+                    nextNode = null;
+                    break;
+                }
+            } else if (nextNode.nodeType === 1) {
+                // If this an element, we break regardless. If it's an "a" node,
+                // it's the one we want. Otherwise, there is no adjacent "a" node
+                // and it can be ignored.
+                if ((tagName === null) || (nextNode.nodeName.toLowerCase() === tagName)) {
+                    // Correct element, or we aren't picky.
+                    break;
+                } else if (immediate === true) {
+                    // Failed. Immediate node requested and not correct tag name.
+                    nextNode = null;
+                    break;
+                }
+
+                break;
+            }//end if
+
+            nextNode = nextNode.nextSibling;
+        }//end if
+
+        return nextNode;
     }
 };

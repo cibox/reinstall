@@ -11,7 +11,7 @@
  *
  */
 
-_global.HTMLCS_WCAG2AAA_Sniffs_Principle2_Guideline2_4_2_4_1 = {
+var HTMLCS_WCAG2AAA_Sniffs_Principle2_Guideline2_4_2_4_1 = {
     /**
      * Determines the elements to register for processing.
      *
@@ -126,15 +126,7 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle2_Guideline2_4_2_4_1 = {
                     // named anchor using the name attribute.
                     var target = doc.getElementById(id);
                     if (target === null) {
-                        var _doc         = HTMLCS.util.getElementWindow(top).document;
-                        var doctype      = HTMLCS.util.getDocumentType(_doc);
-                        var nameSelector = 'a';
-
-                        if (doctype && doctype.indexOf('html5') === -1) {
-                            nameSelector = '*';
-                        }
-
-                        target = doc.querySelector(nameSelector + '[name="' + id + '"]');
+                        target = doc.querySelector('a[name="' + id + '"]');
                     }
 
                     if ((target === null) || (HTMLCS.util.contains(top, target) === false)) {

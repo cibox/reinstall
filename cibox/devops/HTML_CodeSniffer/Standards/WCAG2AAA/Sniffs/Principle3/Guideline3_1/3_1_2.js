@@ -11,7 +11,7 @@
  *
  */
 
-_global.HTMLCS_WCAG2AAA_Sniffs_Principle3_Guideline3_1_3_1_2 = {
+var HTMLCS_WCAG2AAA_Sniffs_Principle3_Guideline3_1_3_1_2 = {
     /**
      * Determines the elements to register for processing.
      *
@@ -44,7 +44,7 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle3_Guideline3_1_3_1_2 = {
         // (which doesn't get picked up by the above query). Instead of going off the
         // cliff of the collection, the last loop (i === langEls.length) checks the
         // top element.
-        var langEls = HTMLCS.util.getAllElements(top, '*[lang]');
+        var langEls = top.querySelectorAll('*[lang]');
         for (var i = 0; i <= langEls.length; i++) {
             if (i === langEls.length) {
                 var langEl = top;

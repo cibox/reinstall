@@ -1,4 +1,4 @@
-var HTMLCS_RUNNER = _global.HTMLCS_RUNNER = new function() {
+var HTMLCS_RUNNER = new function() {
     this.run = function(standard, callback) {
         var self = this;
 
@@ -48,16 +48,7 @@ var HTMLCS_RUNNER = _global.HTMLCS_RUNNER = new function() {
         if (msg.element.id && (msg.element.id !== '')) {
             elementId = '#' + msg.element.id;
         }
-
-        // Clone the node to get it's outerHTML (with inner replaced with ... for brevity)
-        var html = '';
-        if (msg.element.outerHTML) {
-            var node = msg.element.cloneNode(true);
-            node.innerHTML = '...';
-            html = node.outerHTML;
-        }
-
-        console.log('[HTMLCS] ' + typeName + '|' + msg.code + '|' + nodeName + '|' + elementId + '|' + msg.msg + '|' + html);
+        console.log('[HTMLCS] ' + typeName + '|' + msg.code + '|' + nodeName + '|' + elementId + '|' + msg.msg);
     };
 
 };

@@ -11,7 +11,7 @@
  *
  */
 
-_global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_4_1_4_3_Contrast = {
+var HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_4_1_4_3_Contrast = {
     testContrastRatio: function (top, minContrast, minLargeContrast)
     {
         var startDate = new Date();
@@ -29,7 +29,7 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_4_1_4_3_Contrast = {
             var node = toProcess.shift();
 
             // This is an element.
-            if (node && (node.nodeType === 1) && (HTMLCS.util.isVisuallyHidden(node) === false) && (HTMLCS.util.isDisabled(node) === false)) {
+            if ((node.nodeType === 1) && (HTMLCS.util.isHidden(node) === false) && (HTMLCS.util.isDisabled(node) === false)) {
                 var processNode = false;
                 for (var i = 0; i < node.childNodes.length; i++) {
                     // Load up new nodes, but also only process this node when
@@ -66,7 +66,7 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_4_1_4_3_Contrast = {
                         // Calculate font size. Note that CSS 2.1 fixes a reference pixel
                         // as 96 dpi (hence "pixel ratio" workarounds for Hi-DPI devices)
                         // so this calculation should be safe.
-                        var fontSize      = parseFloat(style.fontSize, 10) * (72 / 96);
+                        var fontSize      = parseInt(style.fontSize, 10) * (72 / 96);
                         var minLargeSize  = 18;
 
                         if ((style.fontWeight === 'bold') || (parseInt(style.fontWeight, 10) >= 600)) {
@@ -117,7 +117,6 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_4_1_4_3_Contrast = {
                                 required: reqRatio,
                                 isAbsolute: true
                             });
-                            continue;
                         } else if ((bgColour === 'transparent') || (bgColour === 'rgba(0, 0, 0, 0)')) {
                             // If the background colour is still transparent, this is probably
                             // a fragment with which we cannot reliably make a statement about
@@ -126,6 +125,9 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_4_1_4_3_Contrast = {
                         }
 
                         var contrastRatio = HTMLCS.util.contrastRatio(bgColour, style.color);
+
+
+
                         if (contrastRatio < reqRatio) {
                             var recommendation = this.recommendColour(bgColour, style.color, reqRatio);
 

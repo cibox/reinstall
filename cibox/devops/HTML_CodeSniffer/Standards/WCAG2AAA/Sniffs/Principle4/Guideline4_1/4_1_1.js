@@ -11,7 +11,7 @@
  *
  */
 
-_global.HTMLCS_WCAG2AAA_Sniffs_Principle4_Guideline4_1_4_1_1 = {
+var HTMLCS_WCAG2AAA_Sniffs_Principle4_Guideline4_1_4_1_1 = {
     /**
      * Determines the elements to register for processing.
      *
@@ -37,7 +37,7 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle4_Guideline4_1_4_1_1 = {
     process: function(element, top)
     {
         if (element === top) {
-            var elsWithIds = HTMLCS.util.getAllElements(top, '*[id]');
+            var elsWithIds = top.querySelectorAll('*[id]');
             var usedIds    = {};
 
             for (var i = 0; i < elsWithIds.length; i++) {

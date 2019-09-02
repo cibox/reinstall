@@ -11,7 +11,7 @@
  *
  */
 
-_global.HTMLCS_WCAG2AAA_Sniffs_Principle4_Guideline4_1_4_1_2 = {
+var HTMLCS_WCAG2AAA_Sniffs_Principle4_Guideline4_1_4_1_2 = {
     /**
      * Determines the elements to register for processing.
      *
@@ -87,7 +87,7 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle4_Guideline4_1_4_1_2 = {
             noContent: []
         };
 
-        var elements = HTMLCS.util.getAllElements(top, 'a:not([role="button"])');
+        var elements = top.querySelectorAll('a');
 
         for (var el = 0; el < elements.length; el++) {
             var element = elements[el];
@@ -152,22 +152,22 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle4_Guideline4_1_4_1_2 = {
 
     processFormControls: function(top)
     {
-        var elements = HTMLCS.util.getAllElements(top, 'button, fieldset, input, select, textarea, [role="button"]');
+        var elements = top.querySelectorAll('button, fieldset, input, select, textarea');
         var errors   = [];
         var warnings = [];
 
         var requiredNames = {
-            button: ['@title', '_content', '@aria-label', '@aria-labelledby'],
-            fieldset: ['legend', '@aria-label', '@aria-labelledby'],
-            input_button: ['@value', '@aria-label', '@aria-labelledby'],
-            input_text: ['label', '@title', '@aria-label', '@aria-labelledby'],
-            input_file: ['label', '@title', '@aria-label', '@aria-labelledby'],
-            input_password: ['label', '@title', '@aria-label', '@aria-labelledby'],
-            input_checkbox: ['label', '@title', '@aria-label', '@aria-labelledby'],
-            input_radio: ['label', '@title', '@aria-label', '@aria-labelledby'],
-            input_image: ['@alt', '@title', '@aria-label', '@aria-labelledby'],
-            select: ['label', '@title', '@aria-label', '@aria-labelledby'],
-            textarea: ['label', '@title', '@aria-label', '@aria-labelledby']
+            button: ['@title', '_content'],
+            fieldset: ['legend'],
+            input_button: ['@value'],
+            input_text: ['label', '@title'],
+            input_file: ['label', '@title'],
+            input_password: ['label', '@title'],
+            input_checkbox: ['label', '@title'],
+            input_radio: ['label', '@title'],
+            input_image: ['@alt', '@title'],
+            select: ['label', '@title'],
+            textarea: ['label', '@title']
         }
 
         var requiredValues = {
@@ -195,18 +195,13 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle4_Guideline4_1_4_1_2 = {
                 var msgSubCode = 'Input' + nodeName.substr(6, 1).toUpperCase() + nodeName.substr(7).toLowerCase();
             }//end if
 
-            var matchingRequiredNames  = requiredNames[nodeName];
+            var requiredName  = requiredNames[nodeName];
             var requiredValue = requiredValues[nodeName];
 
-            // Any element that doesn't have specific handling must have content.
-            if (!matchingRequiredNames && nodeName !== 'input_hidden') {
-                matchingRequiredNames = ['_content'];
-            }
-
             // Check all possible combinations of names to ensure that one exists.
-            if (matchingRequiredNames) {
-                for (var i = 0; i < matchingRequiredNames.length; i++) {
-                    var requiredName = matchingRequiredNames[i];
+            if (requiredName) {
+                for (var i = 0; i < requiredNames[nodeName].length; i++) {
+                    var requiredName = requiredNames[nodeName][i];
                     if (requiredName === '_content') {
                         // Work with content.
                         var content = HTMLCS.util.getElementTextContent(element);
@@ -218,16 +213,12 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle4_Guideline4_1_4_1_2 = {
                         // functions in SC 1.3.1.
                         var hasLabel = HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_3_1_3_1.testLabelsOnInputs(element, top, true);
                         if (hasLabel !== false) {
+                            found = true;
                             break;
                         }
                     } else if (requiredName.charAt(0) === '@') {
                         // Attribute.
                         requiredName = requiredName.substr(1, requiredName.length);
-
-                        if ((requiredName === 'aria-label' || requiredName === 'aria-labelledby') && HTMLCS.util.hasValidAriaLabel(element)) {
-                            break;
-                        }
-
                         if ((element.hasAttribute(requiredName) === true) && (/^\s*$/.test(element.getAttribute(requiredName)) === false)) {
                             break;
                         }
@@ -243,17 +234,13 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle4_Guideline4_1_4_1_2 = {
                     }//end if
                 }//end for
 
-                if (i === matchingRequiredNames.length) {
+                if (i === requiredNames[nodeName].length) {
                     var msgNodeType = nodeName + ' element';
                     if (nodeName.substr(0, 6) === 'input_') {
                         msgNodeType = nodeName.substr(6) + ' input element';
                     }
 
-                    if (element.hasAttribute('role') && element.getAttribute('role') === 'button') {
-                        msgNodeType = 'element has a role of "button" but';
-                    }
-
-                    var builtAttrs = matchingRequiredNames.slice(0, matchingRequiredNames.length);
+                    var builtAttrs = requiredNames[nodeName].slice(0, requiredNames[nodeName].length);
                     for (var a = 0; a < builtAttrs.length; a++) {
                         if (builtAttrs[a] === '_content') {
                             builtAttrs[a] = 'element content';
@@ -273,7 +260,8 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle4_Guideline4_1_4_1_2 = {
                 }
             }//end if
 
-            var valueFound = false;
+            var requiredValue = requiredValues[nodeName];
+            var valueFound    = false;
 
             if (requiredValue === undefined) {
                 // Nothing required of us.
@@ -304,11 +292,6 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle4_Guideline4_1_4_1_2 = {
                 }
             }//end if
 
-            // Check for valid aria labels.
-            if (valueFound === false) {
-                valuFound = HTMLCS.util.hasValidAriaLabel(element);
-            }
-
             if (valueFound === false) {
                 var msgNodeType = nodeName + ' element';
                 if (nodeName.substr(0, 6) === 'input_') {
@@ -316,7 +299,7 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle4_Guideline4_1_4_1_2 = {
                 }
 
                 var msg = 'This ' + msgNodeType + ' does not have a value available to an accessibility API.';
-
+                
                 var builtAttr = '';
                 var warning   = false;
                 if (requiredValue === '_content') {

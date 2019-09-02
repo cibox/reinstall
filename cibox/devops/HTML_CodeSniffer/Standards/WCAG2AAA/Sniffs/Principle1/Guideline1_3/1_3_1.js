@@ -11,7 +11,7 @@
  *
  */
 
-_global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_3_1_3_1 = {
+var HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_3_1_3_1 = {
 	_labelNames: null,
 
 	register: function()
@@ -94,30 +94,6 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_3_1_3_1 = {
 				break;
 			}//end switch
 		}//end if
-	},
-
-	/**
-	 * Test elements for presentation roles that also contain semantic child elements.
-	 *
-	 * @param {DOMNode} element The element to test.
-	 */
-	testSemanticPresentationRole: function(element)
-	{
-		if (element.hasAttribute('role') && element.getAttribute('role') === 'presentation') {
-			var permitted = ['div', 'span', 'b', 'i'];
-			var children  = element.querySelectorAll('*:not('+permitted.join('):not(')+')');
-			children      = [].filter.call(children, function(child) {
-				return child.hasAttribute('role') === false;
-			});
-			if (children.length) {
-				HTMLCS.addMessage(
-					HTMLCS.ERROR,
-					element,
-					'This element\'s role is "presentation" but contains child elements with semantic meaning.',
-					'F92,ARIA4'
-				);
-			}
-		}
 	},
 
 	/**
@@ -256,8 +232,9 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_3_1_3_1 = {
 		}
 
 		// Find an aria-label attribute.
-		if (element.hasAttribute('aria-label') === true) {
-			if (HTMLCS.util.hasValidAriaLabel(element) === false) {
+		var ariaLabel = element.getAttribute('aria-label');
+		if (ariaLabel !== null) {
+			if ((/^\s*$/.test(ariaLabel) === true) && (needsLabel === true)) {
 				HTMLCS.addMessage(
 					HTMLCS.WARNING,
 					element,
@@ -269,17 +246,28 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_3_1_3_1 = {
 			}
 		}
 
-
 		// Find an aria-labelledby attribute.
-		if (element.hasAttribute('aria-labelledby') === true) {
-			if (HTMLCS.util.hasValidAriaLabel(element) === false) {
-				HTMLCS.addMessage(
-					HTMLCS.WARNING,
-					element,
-					'This form control contains an aria-labelledby attribute, however it includes an ID "' + element.getAttribute('aria-labelledby') + '" that does not exist on an element. The aria-labelledby attribute will be ignored for labelling test purposes.',
-					'ARIA16,ARIA9'
-				);
-			} else {
+		var ariaLabelledBy = element.getAttribute('aria-labelledby');
+		if (ariaLabelledBy && (/^\s*$/.test(ariaLabelledBy) === false)) {
+			var labelledByIds = ariaLabelledBy.split(/\s+/);
+			var ok = true;
+
+			// First check that all of the IDs (space separated) are present and correct.
+			for (var x = 0; x < labelledByIds.length; x++) {
+				var labelledByElement = element.ownerDocument.querySelector('#' + labelledByIds[x]);
+				if (!labelledByElement) {
+					HTMLCS.addMessage(
+						HTMLCS.WARNING,
+						element,
+						'This form control contains an aria-labelledby attribute, however it includes an ID "' + labelledByIds[x] + '" that does not exist on an element. The aria-labelledby attribute will be ignored for labelling test purposes.',
+						'ARIA16,ARIA9'
+					);
+					ok = false;
+				}
+			}
+
+			// We are all OK, add as a successful label technique.
+			if (ok === true) {
 				addToLabelList('aria-labelledby');
 			}
 		}
@@ -341,29 +329,29 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_3_1_3_1 = {
 		var _doc    = HTMLCS.util.getElementWindow(top).document;
 		var doctype = HTMLCS.util.getDocumentType(_doc);
 
-		if (doctype && (doctype === 'html5' || doctype === 'xhtml5')) {
-			var tags = HTMLCS.util.getAllElements(top, 'strike, tt, big, center, font');
+		if ((doctype === 'html5') || (doctype === 'xhtml5')) {
+			var tags = top.querySelectorAll('strike, tt, big, center, font');
 			for (var i = 0; i < tags.length; i++) {
 				var msgCode = 'H49.' + tags[i].nodeName.substr(0, 1).toUpperCase() + tags[i].nodeName.substr(1).toLowerCase();
 				HTMLCS.addMessage(HTMLCS.ERROR, tags[i], 'Presentational markup used that has become obsolete in HTML5.', msgCode);
 			}
 
 			// Align attributes, too.
-			var tags = HTMLCS.util.getAllElements(top, '*[align]');
+			var tags = top.querySelectorAll('*[align]');
 
 			for (var i = 0; i < tags.length; i++) {
 				var msgCode = 'H49.AlignAttr';
 				HTMLCS.addMessage(HTMLCS.ERROR, tags[i], 'Align attributes .', msgCode);
 			}
 		} else {
-			var tags = HTMLCS.util.getAllElements(top, 'b, i, u, s, strike, tt, big, small, center, font');
+			var tags = top.querySelectorAll('b, i, u, s, strike, tt, big, small, center, font');
 			for (var i = 0; i < tags.length; i++) {
 				var msgCode = 'H49.' + tags[i].nodeName.substr(0, 1).toUpperCase() + tags[i].nodeName.substr(1).toLowerCase();
 				HTMLCS.addMessage(HTMLCS.WARNING, tags[i], 'Semantic markup should be used to mark emphasised or special text so that it can be programmatically determined.', msgCode);
 			}
 
 			// Align attributes, too.
-			var tags = HTMLCS.util.getAllElements(top, '*[align]');
+			var tags = top.querySelectorAll('*[align]');
 
 			for (var i = 0; i < tags.length; i++) {
 				var msgCode = 'H49.AlignAttr';
@@ -594,7 +582,7 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_3_1_3_1 = {
 
 		// In HTML5, Summary no longer exists, so only run this for older versions.
 		var doctype = HTMLCS.util.getDocumentType(table.ownerDocument);
-		if (doctype && doctype.indexOf('html5') === -1) {
+		if (doctype.indexOf('html5') === -1) {
 			summary = summary.replace(/^\s*(.*?)\s*$/g, '$1');
 			if (summary !== '') {
 				if (HTMLCS.util.isLayoutTable(table) === true) {
@@ -761,7 +749,7 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_3_1_3_1 = {
 
 	testHeadingOrder: function(top, level) {
 		var lastHeading = 0;
-		var headings    = HTMLCS.util.getAllElements(top, 'h1, h2, h3, h4, h5, h6');
+		var headings    = top.querySelectorAll('h1, h2, h3, h4, h5, h6');
 
 		for (var i = 0; i < headings.length; i++) {
 			var headingNum = parseInt(headings[i].nodeName.substr(1, 1));
@@ -788,7 +776,11 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_3_1_3_1 = {
 	 * @returns void
 	 */
 	testEmptyHeading: function(element) {
-		var text = HTMLCS.util.getElementTextContent(element, true);
+		var text = element.textContent;
+
+		if (text === undefined) {
+			text = element.innerText;
+		}
 
 		if (/^\s*$/.test(text) === true) {
 			HTMLCS.addMessage(HTMLCS.ERROR, element, 'Heading tag found with no content. Text that is not intended as a heading should not be marked up with heading tags.', 'H42.2');

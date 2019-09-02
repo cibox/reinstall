@@ -11,7 +11,7 @@
  *
  */
 
-_global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_4_1_4_3_F24 = {
+var HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_4_1_4_3_F24 = {
     /**
      * Determines the elements to register for processing.
      *
@@ -35,7 +35,7 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_4_1_4_3_F24 = {
     process: function(element, top)
     {
         // Test for background/foreground stuff.
-        var elements = HTMLCS.util.getAllElements(top, '*');
+        var elements = top.querySelectorAll('*');
         for (var i = 0; i < elements.length; i++) {
             this.testColourComboFail(elements[i]);
         }

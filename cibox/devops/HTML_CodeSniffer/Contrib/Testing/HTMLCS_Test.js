@@ -146,7 +146,26 @@ if (system.args.length < 2 || system.args.length > 2) {
                     }
                 };
 
-                page.injectJs('../../build/HTMLCS.js');
+                // Include all sniff files.
+                var injectAllStandards = function(dir) {
+                    var files = fs.list(dir),
+                        filesLen = files.length,
+                        absPath = '';
+                    for (var i = 0; i < filesLen; i++) {
+                        if (files[i] === '.' || files[i] === '..') continue;
+
+                        absPath = fs.absolute(dir + '/' + files[i]);
+                        if (fs.isDirectory(absPath) === true) {
+                            injectAllStandards(absPath);
+                        } else if (fs.isFile(absPath) === true) {
+                            page.injectJs(absPath);
+                        }
+                    }
+                };
+
+                injectAllStandards('../../Standards');
+                page.injectJs('../../HTMLCS.js');
+                page.injectJs('../PhantomJS/runner.js');
 
                 // Now Run. Note that page.evaluate() function is sanboxed to
                 // the loaded page's context. We can't pass any variable to it.

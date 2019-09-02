@@ -11,7 +11,7 @@
  *
  */
 
-_global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_1_1_1_1 = {
+var HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_1_1_1_1 = {
     /**
      * Determines the elements to register for processing.
      *
@@ -133,7 +133,7 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_1_1_1_1 = {
             }
         };
 
-        elements = HTMLCS.util.getAllElements(top, 'img, area, input[type="image"]');
+        elements = top.querySelectorAll('img, area, input[type="image"]');
 
         for (var el = 0; el < elements.length; el++) {
             var element = elements[el];
@@ -144,8 +144,8 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_1_1_1_1 = {
             var nullAlt       = false;
 
             if (element.parentNode.nodeName.toLowerCase() === 'a') {
-                var prevNode = HTMLCS.util.getPreviousSiblingElement(element, null);
-                var nextNode = HTMLCS.util.getNextSiblingElement(element, null);
+                var prevNode = this._getPreviousSiblingElement(element, null);
+                var nextNode = this._getNextSiblingElement(element, null);
 
                 if ((prevNode === null) && (nextNode === null)) {
                     var textContent = element.parentNode.textContent;
@@ -286,8 +286,8 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_1_1_1_1 = {
             //     (This leaves one link with no text at all - the two should be
             //      combined into one link.)
             if (nodes.anchor.text === '') {
-                var prevLink = HTMLCS.util.getPreviousSiblingElement(anchor, 'a', true);
-                var nextLink = HTMLCS.util.getNextSiblingElement(anchor, 'a', true);
+                var prevLink = this._getPreviousSiblingElement(anchor, 'a', true);
+                var nextLink = this._getNextSiblingElement(anchor, 'a', true);
 
                 if (prevLink !== null) {
                     nodes.previous = {
@@ -347,11 +347,11 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_1_1_1_1 = {
         var errors = this.testMediaTextAlternatives(top);
 
         for (var i = 0; i < errors.object.missingBody.length; i++) {
-            HTMLCS.addMessage(HTMLCS.ERROR, errors.object.missingBody[i], 'Object elements must contain a text alternative after all other alternatives are exhausted.', 'H53,ARIA6');
+            HTMLCS.addMessage(HTMLCS.ERROR, errors.object.missingBody[i], 'Object elements must contain a text alternative after all other alternatives are exhausted.', 'H53');
         }
 
         for (var i = 0; i < errors.object.generalAlt.length; i++) {
-            HTMLCS.addMessage(HTMLCS.NOTICE, errors.object.generalAlt[i], 'Check that short (and if appropriate, long) text alternatives are available for non-text content that serve the same purpose and present the same information.', 'G94,G92.Object,ARIA6');
+            HTMLCS.addMessage(HTMLCS.NOTICE, errors.object.generalAlt[i], 'Check that short (and if appropriate, long) text alternatives are available for non-text content that serve the same purpose and present the same information.', 'G94,G92.Object');
         }
 
         for (var i = 0; i < errors.applet.missingBody.length; i++) {
@@ -381,7 +381,7 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_1_1_1_1 = {
             }
         };
 
-        var elements = HTMLCS.util.getAllElements(top, 'object');
+        var elements = top.querySelectorAll('object');
 
         for (var el = 0; el < elements.length; el++) {
             var element  = elements[el];
@@ -392,19 +392,16 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_1_1_1_1 = {
             // If we have an object as our alternative, skip it. Pass the blame onto
             // the child.
             if (childObject === null) {
-                if (HTMLCS.util.isStringEmpty(HTMLCS.util.getElementTextContent(element, true)) === true) {
-                    if (HTMLCS.util.hasValidAriaLabel(element) === false) {
-                        errors.object.missingBody.push(element);
-                    }
+                var textAlt = HTMLCS.util.getElementTextContent(element, true);
+                if (textAlt === '') {
+                    errors.object.missingBody.push(element);
                 } else {
-                    if (HTMLCS.util.hasValidAriaLabel(element) === false) {
-                        errors.object.generalAlt.push(element);
-                    }
+                    errors.object.generalAlt.push(element);
                 }
             }//end if
         }//end if
 
-        var elements = HTMLCS.util.getAllElements(top, 'applet');
+        var elements = top.querySelectorAll('applet');
 
         for (var el = 0; el < elements.length; el++) {
             // Test firstly for whether we have an object alternative.
@@ -426,11 +423,6 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_1_1_1_1 = {
             if (HTMLCS.util.isStringEmpty(altAttr) === true) {
                 errors.applet.missingAlt.push(element);
                 hasError = true;
-            }
-
-            // Catch anything with a valid aria label.
-            if (HTMLCS.util.hasValidAriaLabel(element) === true) {
-                hasError = false;
             }
 
             if (hasError === false) {
@@ -480,5 +472,117 @@ _global.HTMLCS_WCAG2AAA_Sniffs_Principle1_Guideline1_1_1_1_1 = {
         }
 
         return alt;
+    },
+
+    /**
+     * Get the previous sibling element.
+     *
+     * This is a substitute for previousSibling where there are text, comment and
+     * other nodes between elements.
+     *
+     * If tagName is null, immediate is ignored and effectively defaults to true: the
+     * previous element will be returned regardless of what it is.
+     *
+     * @param {DOMNode} element           Element to start from.
+     * @param {String}  [tagName=null]    Only match this tag. If null, match any.
+     *                                    Not case-sensitive.
+     * @param {Boolean} [immediate=false] Only match if the tag in tagName is the
+     *                                    immediately preceding non-whitespace node.
+     *
+     * @returns {DOMNode} The appropriate node or null if none is found.
+     */
+    _getPreviousSiblingElement: function(element, tagName, immediate) {
+        if (tagName === undefined) {
+            tagName = null;
+        }
+
+        if (immediate === undefined) {
+            immediate = false;
+        }
+
+        var prevNode = element.previousSibling;
+        while (prevNode !== null) {
+            if (prevNode.nodeType === 3) {
+                if ((HTMLCS.util.isStringEmpty(prevNode.nodeValue) === false) && (immediate === true)) {
+                    // Failed. Immediate node requested and we got text instead.
+                    prevNode = null;
+                    break;
+                }
+            } else if (prevNode.nodeType === 1) {
+                // If this an element, we break regardless. If it's an "a" node,
+                // it's the one we want. Otherwise, there is no adjacent "a" node
+                // and it can be ignored.
+                if ((tagName === null) || (prevNode.nodeName.toLowerCase() === tagName)) {
+                    // Correct element, or we aren't picky.
+                    break;
+                } else if (immediate === true) {
+                    // Failed. Immediate node requested and not correct tag name.
+                    prevNode = null;
+                    break;
+                }
+
+                break;
+            }//end if
+
+            prevNode = prevNode.previousSibling;
+        }//end if
+
+        return prevNode;
+    },
+
+    /**
+     * Get the next sibling element.
+     *
+     * This is a substitute for nextSibling where there are text, comment and
+     * other nodes between elements.
+     *
+     * If tagName is null, immediate is ignored and effectively defaults to true: the
+     * next element will be returned regardless of what it is.
+     *
+     * @param {DOMNode} element           Element to start from.
+     * @param {String}  [tagName=null]    Only match this tag. If null, match any.
+     *                                    Not case-sensitive.
+     * @param {Boolean} [immediate=false] Only match if the tag in tagName is the
+     *                                    immediately following non-whitespace node.
+     *
+     * @returns {DOMNode} The appropriate node or null if none is found.
+     */
+    _getNextSiblingElement: function(element, tagName, immediate) {
+        if (tagName === undefined) {
+            tagName = null;
+        }
+
+        if (immediate === undefined) {
+            immediate = false;
+        }
+
+        var nextNode = element.nextSibling;
+        while (nextNode !== null) {
+            if (nextNode.nodeType === 3) {
+                if ((HTMLCS.util.isStringEmpty(nextNode.nodeValue) === false) && (immediate === true)) {
+                    // Failed. Immediate node requested and we got text instead.
+                    nextNode = null;
+                    break;
+                }
+            } else if (nextNode.nodeType === 1) {
+                // If this an element, we break regardless. If it's an "a" node,
+                // it's the one we want. Otherwise, there is no adjacent "a" node
+                // and it can be ignored.
+                if ((tagName === null) || (nextNode.nodeName.toLowerCase() === tagName)) {
+                    // Correct element, or we aren't picky.
+                    break;
+                } else if (immediate === true) {
+                    // Failed. Immediate node requested and not correct tag name.
+                    nextNode = null;
+                    break;
+                }
+
+                break;
+            }//end if
+
+            nextNode = nextNode.nextSibling;
+        }//end if
+
+        return nextNode;
     }
 };

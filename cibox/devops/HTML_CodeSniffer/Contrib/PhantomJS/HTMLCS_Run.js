@@ -10,7 +10,7 @@ var messages = {
 if (system.args.length < 3 || system.args.length > 4) {
     console.log('Usage: phantomjs HTMLCS_Run.js URL standard [report]');
     console.log('  available standards: "WCAG2A", "WCAG2AA", "WCAG2AAA", "Section508"');
-    console.log('  available reports: "default" (default if omitted), "table", "json"');
+    console.log('  available reports: "default" (default if omitted), "table"');
     phantom.exit();
 } else {
     address    = system.args[1];
@@ -19,6 +19,11 @@ if (system.args.length < 3 || system.args.length > 4) {
     if (system.args.length > 3) {
         reportType = system.args[3];
     }
+
+    page.onError = function(msg, trace) {
+      console.error(msg);
+      phantom.exit(1);
+    };
 
     // Get the absolute working directory from the PWD var and
     // and the command line $0 argument.
@@ -92,41 +97,16 @@ if (system.args.length < 3 || system.args.length > 4) {
         console.log('');
         console.log('Errors: ' + messages['ERROR'].length + ', Warnings: ' + messages['WARNING'].length +
             ', Notices: ' + messages['NOTICE'].length);
+	if (messages['ERROR'].length > 0) {
+	  throw "Error: Accessibility Errors found for standard: " + standard;
+	}
         cb();
     }
-
-    var reportJSONFn = function(cb) {
-        var reportJSONData = [];
-        var levels = ['ERROR', 'WARNING', 'NOTICE'];
-        for (var lvl = 0; lvl < levels.length; lvl++) {
-            for (var i = 0; i < messages[levels[lvl]].length; i++) {
-                var thisMsg = messages[levels[lvl]][i];
-                reportJSONData.push({
-                    type: thisMsg[0],
-                    code: thisMsg[1],
-                    nodeName: thisMsg[2],
-                    id: thisMsg[3],
-                    msg: thisMsg[4],
-                    outerHTML: thisMsg[5]
-                });
-            }
-        }
-
-        console.log('[');
-        reportJSONData.forEach(function(report, i) {
-            console.log(JSON.stringify(report, null, '    '));
-            if (i < reportJSONData.length-1) {
-                console.log(',');
-            }
-        });
-        console.log(']');
-        cb();
-    };
 
     page.open(address, function (status) {
         if (status !== 'success') {
             console.log('Unable to load the address!');
-            phantom.exit();
+            phantom.exit(1);
         } else {
             window.setTimeout(function () {
 
@@ -145,10 +125,6 @@ if (system.args.length < 3 || system.args.length > 4) {
                                 reportTableFn(cb);
                             break;
 
-                            case 'json':
-                                reportJSONFn(cb);
-                            break;
-
                             default:
                                 reportDefaultFn(cb);
                             break;
@@ -158,7 +134,28 @@ if (system.args.length < 3 || system.args.length > 4) {
                     }
                 };
 
-                page.injectJs(cwd + '/../../build/HTMLCS.js');
+                // Include all sniff files.
+                var fs = require('fs');
+                var injectAllStandards = function(dir) {
+                    var files = fs.list(dir),
+                        filesLen = files.length,
+                        absPath = '';
+                    for (var i = 0; i < filesLen; i++) {
+                        if (files[i] === '.' || files[i] === '..') continue;
+
+                        absPath = fs.absolute(dir + '/' + files[i]);
+                        if (fs.isDirectory(absPath) === true) {
+                            injectAllStandards(absPath);
+                        } else if (fs.isFile(absPath) === true) {
+                            page.injectJs(absPath);
+                        }
+                    }
+                };
+
+                injectAllStandards(cwd + '/../../Standards');
+                page.injectJs(cwd + '/../../HTMLCS.js');
+                page.injectJs(cwd + '/../../HTMLCS.Util.js');
+                page.injectJs(cwd + '/runner.js');
 
                 // Now Run. Note that page.evaluate() function is sanboxed to
                 // the loaded page's context. We can't pass any variable to it.
@@ -171,7 +168,7 @@ if (system.args.length < 3 || system.args.length > 4) {
                     break;
                     default:
                         console.log('Unknown standard.');
-                        phantom.exit();
+                        phantom.exit(1);
                     break;
                 }
             }, 200);
