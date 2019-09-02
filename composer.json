@@ -1,0 +1,14 @@
+{
+    "name": "cibox/reinstall",
+    "description": "Install infrastructure for CIBox",
+    "type": "project",
+    "license": "GPLv3",
+    "authors": [
+        {
+            "name": "Andrii Podanenko",
+            "email": "podarokua@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}
